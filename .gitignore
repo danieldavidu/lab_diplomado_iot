@@ -5,6 +5,7 @@
 #MCUXpresso
 /K32L2B31A_labs_diplomado_iot/Debug/
 /K32L2B31A_labs_diplomado_iot/Release/
+*.xml
 
 # Prerequisites
 *.d
