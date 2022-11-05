@@ -1,2 +1,2 @@
-# lab_diplomado_iot
+# labs_diplomado_iot
 Laboratorios desarrollados durante el diplomado ioT
