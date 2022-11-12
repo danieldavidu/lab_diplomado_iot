@@ -10,10 +10,44 @@
  * Included files
  **********************************************************************************************************************/
 #include "fsl_common.h"
+#include "fsl_adc16.h"
+#include "fsl_lpuart.h"
+#include "fsl_clock.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif /* __cplusplus */
+
+/***********************************************************************************************************************
+ * Definitions
+ **********************************************************************************************************************/
+/* Definitions for BOARD_InitPeripherals functional group */
+/* Alias for ADC0 peripheral */
+#define ADC0_PERIPHERAL ADC0
+/* Definition of custom name for ADC0 configuration #0 (channel 3, control group 0) */
+#define ADC0_SENS_LUZ 0U
+/* ADC0 interrupt vector ID (number). */
+#define ADC0_IRQN ADC0_IRQn
+/* ADC0 interrupt handler identifier. */
+#define ADC0_IRQHANDLER ADC0_IRQHandler
+/* Channel 0 (SE.3) conversion control group. */
+#define ADC0_CH0_CONTROL_GROUP 0
+/* Definition of peripheral ID */
+#define LPUART0_PERIPHERAL LPUART0
+/* Definition of the clock source frequency */
+#define LPUART0_CLOCK_SOURCE 48000000UL
+/* LPUART0 interrupt vector ID (number). */
+#define LPUART0_SERIAL_RX_TX_IRQN LPUART0_IRQn
+/* LPUART0 interrupt handler identifier. */
+#define LPUART0_SERIAL_RX_TX_IRQHANDLER LPUART0_IRQHandler
+
+/***********************************************************************************************************************
+ * Global variables
+ **********************************************************************************************************************/
+extern adc16_channel_config_t ADC0_channelsConfig[1];
+extern const adc16_config_t ADC0_config;
+extern const adc16_channel_mux_mode_t ADC0_muxMode;
+extern const lpuart_config_t LPUART0_config;
 
 /***********************************************************************************************************************
  * Initialization functions
