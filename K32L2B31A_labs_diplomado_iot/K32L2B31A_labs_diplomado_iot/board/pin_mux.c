@@ -27,7 +27,7 @@ pin_labels:
 - {pin_num: '61', pin_signal: LCD_P44/PTD4/LLWU_P14/SPI1_SS/UART2_RX/TPM0_CH4/FXIO0_D4, label: 'J2[6]/D10/SPI1_PCS0/LCD_P44', identifier: LCD_P44}
 - {pin_num: '63', pin_signal: LCD_P46/ADC0_SE7b/PTD6/LLWU_P15/SPI1_MOSI/LPUART0_RX/SPI1_MISO/FXIO0_D6, label: 'J2[8]/D11/SPI1_MOSI/LCD_P46'}
 - {pin_num: '64', pin_signal: LCD_P47/PTD7/SPI1_MISO/LPUART0_TX/SPI1_MOSI/FXIO0_D7, label: 'J2[10]/D12/SPI1_MISO/LCD_P47'}
-- {pin_num: '62', pin_signal: LCD_P45/ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5/FXIO0_D5, label: 'J2[12]/D13/SPI1_SCK/LED1/LCD_P45', identifier: LED1}
+- {pin_num: '62', pin_signal: LCD_P45/ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5/FXIO0_D5, label: LED1, identifier: LED1}
 - {pin_num: '1', pin_signal: LCD_P48/PTE0/CLKOUT32K/SPI1_MISO/LPUART1_TX/RTC_CLKOUT/CMP0_OUT/I2C1_SDA, label: 'J2[18]/J4[9]/D14/I2C1_SDA/CMP0_OUT/LCD_P48', identifier: I2C1_SDA}
 - {pin_num: '2', pin_signal: LCD_P49/PTE1/SPI1_MOSI/LPUART1_RX/SPI1_MISO/I2C1_SCL, label: 'J2[20]/D15/I2C1_SCL/LCD_P49', identifier: I2C1_SCL}
 - {pin_num: '39', pin_signal: LCD_P12/PTB16/SPI1_MOSI/LPUART0_RX/TPM_CLKIN0/SPI1_MISO, label: 'J2[19]/LCD_P12'}
@@ -98,6 +98,7 @@ void BOARD_InitBootPins(void)
     BOARD_InitPins();
     BOARD_InitDEBUG_UARTPins();
     BOARD_InitLM35();
+    BOARD_InitSensLuz();
 }
 
 /* clang-format off */
@@ -456,10 +457,10 @@ void BOARD_InitBUTTONSPins(void)
 BOARD_InitLEDsPins:
 - options: {callFromInitBoot: 'false', prefix: BOARD_, coreID: core0, enableClock: 'true'}
 - pin_list:
-  - {pin_num: '19', peripheral: GPIOE, signal: 'GPIO, 31', pin_signal: PTE31/TPM0_CH4, direction: OUTPUT, gpio_init_state: 'true', slew_rate: slow, pull_select: down,
+  - {pin_num: '19', peripheral: GPIOE, signal: 'GPIO, 31', pin_signal: PTE31/TPM0_CH4, direction: OUTPUT, gpio_init_state: 'false', slew_rate: slow, pull_select: up,
     pull_enable: disable}
-  - {pin_num: '62', peripheral: GPIOD, signal: 'GPIO, 5', pin_signal: LCD_P45/ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5/FXIO0_D5, direction: OUTPUT, gpio_init_state: 'true',
-    slew_rate: slow, pull_select: down, pull_enable: disable}
+  - {pin_num: '62', peripheral: GPIOD, signal: 'GPIO, 5', pin_signal: LCD_P45/ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5/FXIO0_D5, direction: OUTPUT, gpio_init_state: 'false',
+    slew_rate: fast, pull_select: up, pull_enable: disable}
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
  */
 /* clang-format on */
@@ -479,43 +480,54 @@ void BOARD_InitLEDsPins(void)
 
     gpio_pin_config_t LED1_config = {
         .pinDirection = kGPIO_DigitalOutput,
-        .outputLogic = 1U
+        .outputLogic = 0U
     };
     /* Initialize GPIO functionality on pin PTD5 (pin 62)  */
     GPIO_PinInit(BOARD_LED1_GPIO, BOARD_LED1_PIN, &LED1_config);
 
     gpio_pin_config_t LED2_config = {
         .pinDirection = kGPIO_DigitalOutput,
-        .outputLogic = 1U
+        .outputLogic = 0U
     };
     /* Initialize GPIO functionality on pin PTE31 (pin 19)  */
     GPIO_PinInit(BOARD_LED2_GPIO, BOARD_LED2_PIN, &LED2_config);
 
-    const port_pin_config_t LED1 = {/* Internal pull-up/down resistor is disabled */
-                                    kPORT_PullDisable,
-                                    /* Slow slew rate is configured */
-                                    kPORT_SlowSlewRate,
-                                    /* Passive filter is disabled */
-                                    kPORT_PassiveFilterDisable,
-                                    /* Low drive strength is configured */
-                                    kPORT_LowDriveStrength,
-                                    /* Pin is configured as PTD5 */
-                                    kPORT_MuxAsGpio};
     /* PORTD5 (pin 62) is configured as PTD5 */
-    PORT_SetPinConfig(BOARD_LED1_PORT, BOARD_LED1_PIN, &LED1);
+    PORT_SetPinMux(BOARD_LED1_PORT, BOARD_LED1_PIN, kPORT_MuxAsGpio);
 
-    const port_pin_config_t LED2 = {/* Internal pull-up/down resistor is disabled */
-                                    kPORT_PullDisable,
-                                    /* Slow slew rate is configured */
-                                    kPORT_SlowSlewRate,
-                                    /* Passive filter is disabled */
-                                    kPORT_PassiveFilterDisable,
-                                    /* Low drive strength is configured */
-                                    kPORT_LowDriveStrength,
-                                    /* Pin is configured as PTE31 */
-                                    kPORT_MuxAsGpio};
+    PORTD->PCR[5] = ((PORTD->PCR[5] &
+                      /* Mask bits to zero which are setting */
+                      (~(PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_SRE_MASK | PORT_PCR_ISF_MASK)))
+
+                     /* Pull Select: Internal pullup resistor is enabled on the corresponding pin, if the
+                      * corresponding PE field is set. */
+                     | PORT_PCR_PS(kPORT_PullUp)
+
+                     /* Pull Enable: Internal pullup or pulldown resistor is not enabled on the corresponding pin. */
+                     | PORT_PCR_PE(kPORT_PullDisable)
+
+                     /* Slew Rate Enable: Fast slew rate is configured on the corresponding pin, if the pin is
+                      * configured as a digital output. */
+                     | PORT_PCR_SRE(kPORT_FastSlewRate));
+
     /* PORTE31 (pin 19) is configured as PTE31 */
-    PORT_SetPinConfig(BOARD_LED2_PORT, BOARD_LED2_PIN, &LED2);
+    PORT_SetPinMux(BOARD_LED2_PORT, BOARD_LED2_PIN, kPORT_MuxAsGpio);
+
+    PORTE->PCR[31] = ((PORTE->PCR[31] &
+                       /* Mask bits to zero which are setting */
+                       (~(PORT_PCR_PS_MASK | PORT_PCR_PE_MASK | PORT_PCR_SRE_MASK | PORT_PCR_ISF_MASK)))
+
+                      /* Pull Select: Internal pullup resistor is enabled on the corresponding pin, if the
+                       * corresponding PE field is set. */
+                      | PORT_PCR_PS(kPORT_PullUp)
+
+                      /* Pull Enable: Internal pullup or pulldown resistor is not enabled on the corresponding
+                       * pin. */
+                      | PORT_PCR_PE(kPORT_PullDisable)
+
+                      /* Slew Rate Enable: Slow slew rate is configured on the corresponding pin, if the pin is
+                       * configured as a digital output. */
+                      | PORT_PCR_SRE(kPORT_SlowSlewRate));
 }
 
 /* clang-format off */
@@ -790,6 +802,56 @@ BOARD_InitLM35:
  * END ****************************************************************************************************************/
 void BOARD_InitLM35(void)
 {
+}
+
+/* clang-format off */
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+BOARD_InitSensLuz:
+- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
+- pin_list:
+  - {pin_num: '11', peripheral: ADC0, signal: 'SE, 3', pin_signal: ADC0_DP3/ADC0_SE3/PTE22/TPM2_CH0/UART2_TX/FXIO0_D6}
+  - {pin_num: '62', peripheral: GPIOD, signal: 'GPIO, 5', pin_signal: LCD_P45/ADC0_SE6b/PTD5/SPI1_SCK/UART2_TX/TPM0_CH5/FXIO0_D5, direction: OUTPUT}
+  - {pin_num: '19', peripheral: GPIOE, signal: 'GPIO, 31', pin_signal: PTE31/TPM0_CH4, direction: OUTPUT}
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+/* clang-format on */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : BOARD_InitSensLuz
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+void BOARD_InitSensLuz(void)
+{
+    /* Port D Clock Gate Control: Clock enabled */
+    CLOCK_EnableClock(kCLOCK_PortD);
+    /* Port E Clock Gate Control: Clock enabled */
+    CLOCK_EnableClock(kCLOCK_PortE);
+
+    gpio_pin_config_t LED1_config = {
+        .pinDirection = kGPIO_DigitalOutput,
+        .outputLogic = 0U
+    };
+    /* Initialize GPIO functionality on pin PTD5 (pin 62)  */
+    GPIO_PinInit(BOARD_INITSENSLUZ_LED1_GPIO, BOARD_INITSENSLUZ_LED1_PIN, &LED1_config);
+
+    gpio_pin_config_t LED2_config = {
+        .pinDirection = kGPIO_DigitalOutput,
+        .outputLogic = 0U
+    };
+    /* Initialize GPIO functionality on pin PTE31 (pin 19)  */
+    GPIO_PinInit(BOARD_INITSENSLUZ_LED2_GPIO, BOARD_INITSENSLUZ_LED2_PIN, &LED2_config);
+
+    /* PORTD5 (pin 62) is configured as PTD5 */
+    PORT_SetPinMux(BOARD_INITSENSLUZ_LED1_PORT, BOARD_INITSENSLUZ_LED1_PIN, kPORT_MuxAsGpio);
+
+    /* PORTE22 (pin 11) is configured as ADC0_SE3 */
+    PORT_SetPinMux(PORTE, 22U, kPORT_PinDisabledOrAnalog);
+
+    /* PORTE31 (pin 19) is configured as PTE31 */
+    PORT_SetPinMux(BOARD_INITSENSLUZ_LED2_PORT, BOARD_INITSENSLUZ_LED2_PIN, kPORT_MuxAsGpio);
 }
 /***********************************************************************************************************************
  * EOF

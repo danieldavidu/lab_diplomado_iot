@@ -193,7 +193,7 @@ void BOARD_InitBUTTONSPins(void);
 #define BOARD_LED2_PIN_MASK (1U << 31U)      /*!<@brief PORT pin mask */
                                              /* @} */
 
-/*! @name PORTD5 (number 62), J2[12]/D13/SPI1_SCK/LED1/LCD_P45
+/*! @name PORTD5 (number 62), LED1
   @{ */
 
 /* Symbols to be used with GPIO driver */
@@ -357,6 +357,40 @@ void BOARD_InitOSCPins(void);
  *
  */
 void BOARD_InitLM35(void);
+
+/*! @name PORTD5 (number 62), LED1
+  @{ */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITSENSLUZ_LED1_FGPIO FGPIOD             /*!<@brief FGPIO peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED1_GPIO GPIOD               /*!<@brief GPIO peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED1_GPIO_PIN_MASK (1U << 5U) /*!<@brief GPIO pin mask */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_INITSENSLUZ_LED1_PORT PORTD               /*!<@brief PORT peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED1_PIN 5U                   /*!<@brief PORT pin number */
+#define BOARD_INITSENSLUZ_LED1_PIN_MASK (1U << 5U)      /*!<@brief PORT pin mask */
+                                                        /* @} */
+
+/*! @name PORTE31 (number 19), LED2
+  @{ */
+
+/* Symbols to be used with GPIO driver */
+#define BOARD_INITSENSLUZ_LED2_FGPIO FGPIOE              /*!<@brief FGPIO peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED2_GPIO GPIOE                /*!<@brief GPIO peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED2_GPIO_PIN_MASK (1U << 31U) /*!<@brief GPIO pin mask */
+
+/* Symbols to be used with PORT driver */
+#define BOARD_INITSENSLUZ_LED2_PORT PORTE                /*!<@brief PORT peripheral base pointer */
+#define BOARD_INITSENSLUZ_LED2_PIN 31U                   /*!<@brief PORT pin number */
+#define BOARD_INITSENSLUZ_LED2_PIN_MASK (1U << 31U)      /*!<@brief PORT pin mask */
+                                                         /* @} */
+
+/*!
+ * @brief Configures pin routing and optionally pin electrical features.
+ *
+ */
+void BOARD_InitSensLuz(void);
 
 #if defined(__cplusplus)
 }
