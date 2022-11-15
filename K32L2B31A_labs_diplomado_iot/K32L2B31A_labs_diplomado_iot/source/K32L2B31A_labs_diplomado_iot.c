@@ -140,7 +140,7 @@ int main(void) {
 
 
         i++ ;
-        if(leer_bandera_nuevo_dato()!=0){
+        /*if(leer_bandera_nuevo_dato()!=0){
         		escribir_bandera_nuevo_dato(0);
         		ADC16_SetChannelConfig(ADC0_PERIPHERAL, ADC0_CH0_CONTROL_GROUP,	&ADC0_channelsConfig[0]);
 
@@ -159,41 +159,41 @@ int main(void) {
 
         		memcpy(&sigfox_frame.payload[0],(uint8_t *)(&datos_locales),sizeof(datos_locales));
 
-        		ec25_print_data_raw((uint8_t *)(&sigfox_frame),sizeof(sigfox_frame));
-       		}
+        		ec25_print_data_raw((uint8_t *)(&sigfox_frame),sizeof(sigfox_frame));*/
+       		//}
 
 
-        /*
+
         if(leer_bandera_nuevo_dato()!=0){
         	PRINTF("Valor en ASCII : %d\r\n", leer_dato());
         	escribir_bandera_nuevo_dato(0);
         	if(leer_dato()==82){
-        		/* R=82* /
+        		/* R=82*/
         		PRINTF("LED ROJO SE ENCIENDE");
         		led_on_red();
         	  	}
         	if(leer_dato()==114){
-        		/* r=114* /
+        		/* r=114*/
         		PRINTF("LED ROJO SE APAGA");
    	      		led_off_red();
            	  	}
 
         	if(leer_dato()==86){
-        		/* V=86* /
+        		/* V=86*/
         		PRINTF("LED VERDE SE ENCIENDE");
   	       		led_on_green();
           	  	}
         	if(leer_dato()==118){
-        		/* v=118* /
+        		/* v=118*/
         		PRINTF("LED VERDE SE APAGA");
    	       		led_off_green();
            	  	}
         	if(leer_dato()==76){
-        		/* L=76* /
+        		/* L=76*/
         	PRINTF("lux: %f\r\n", Sens_dato());
         	   	}
 
-        }*/
+        }
 
         __asm volatile ("nop");
     }
