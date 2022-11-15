@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2022 NXP
+ * Copyright 2018-2020 NXP
  * All rights reserved.
  *
  *
@@ -32,19 +32,26 @@
 #endif
 #endif
 
-/*! @brief Enable or ring buffer flow control (1 - enable, 0 - disable) */
-#ifndef SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL
-#define SERIAL_MANAGER_RING_BUFFER_FLOWCONTROL (0U)
+#if (defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE > 0U))
+/*! @brief Enable or disable serial manager dual(block and non-block) mode (1 - enable, 0 - disable) */
+#ifdef DEBUG_CONSOLE_TRANSFER_NON_BLOCKING
+#else
+#if (defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE > 0U))
+#ifndef SERIAL_MANAGER_NON_BLOCKING_DUAL_MODE
+#define SERIAL_MANAGER_NON_BLOCKING_DUAL_MODE (1U)
 #endif
+#endif
+#endif
+#ifndef SERIAL_MANAGER_NON_BLOCKING_DUAL_MODE
+#define SERIAL_MANAGER_NON_BLOCKING_DUAL_MODE (0U)
+#endif
+#endif
+
 /*! @brief Enable or disable uart port (1 - enable, 0 - disable) */
 #ifndef SERIAL_PORT_TYPE_UART
 #define SERIAL_PORT_TYPE_UART (0U)
 #endif
 
-/*! @brief Enable or disable uart dma port (1 - enable, 0 - disable) */
-#ifndef SERIAL_PORT_TYPE_UART_DMA
-#define SERIAL_PORT_TYPE_UART_DMA (0U)
-#endif
 /*! @brief Enable or disable USB CDC port (1 - enable, 0 - disable) */
 #ifndef SERIAL_PORT_TYPE_USBCDC
 #define SERIAL_PORT_TYPE_USBCDC (0U)
@@ -63,24 +70,6 @@
 /*! @brief Enable or disable rPMSG port (1 - enable, 0 - disable) */
 #ifndef SERIAL_PORT_TYPE_RPMSG
 #define SERIAL_PORT_TYPE_RPMSG (0U)
-#endif
-
-/*! @brief Enable or disable SPI Master port (1 - enable, 0 - disable) */
-#ifndef SERIAL_PORT_TYPE_SPI_MASTER
-#define SERIAL_PORT_TYPE_SPI_MASTER (0U)
-#endif
-
-/*! @brief Enable or disable SPI Slave port (1 - enable, 0 - disable) */
-#ifndef SERIAL_PORT_TYPE_SPI_SLAVE
-#define SERIAL_PORT_TYPE_SPI_SLAVE (0U)
-#endif
-
-#if (defined(SERIAL_PORT_TYPE_SPI_SLAVE) && (SERIAL_PORT_TYPE_SPI_SLAVE == 1U))
-#if (defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE == 0U))
-#warning When SERIAL_PORT_TYPE_SPI_SLAVE=1, SERIAL_MANAGER_NON_BLOCKING_MODE should be set.
-#undef SERIAL_MANAGER_NON_BLOCKING_MODE
-#define SERIAL_MANAGER_NON_BLOCKING_MODE (1U)
-#endif
 #endif
 
 /*! @brief Enable or disable SerialManager_Task() handle TX to prevent recursive calling */
@@ -130,9 +119,6 @@
 #include "fsl_component_serial_port_uart.h"
 #endif
 
-#if (defined(SERIAL_PORT_TYPE_UART_DMA) && (SERIAL_PORT_TYPE_UART_DMA > 0U))
-#include "fsl_component_serial_port_uart.h"
-#endif
 #if (defined(SERIAL_PORT_TYPE_RPMSG) && (SERIAL_PORT_TYPE_RPMSG > 0U))
 #include "fsl_component_serial_port_rpmsg.h"
 #endif
@@ -150,12 +136,6 @@
 #include "fsl_component_serial_port_swo.h"
 #endif
 
-#if (defined(SERIAL_PORT_TYPE_SPI_MASTER) && (SERIAL_PORT_TYPE_SPI_MASTER > 0U))
-#include "fsl_component_serial_port_spi.h"
-#endif
-#if (defined(SERIAL_PORT_TYPE_SPI_SLAVE) && (SERIAL_PORT_TYPE_SPI_SLAVE > 0U))
-#include "fsl_component_serial_port_spi.h"
-#endif
 #if (defined(SERIAL_PORT_TYPE_VIRTUAL) && (SERIAL_PORT_TYPE_VIRTUAL > 0U))
 
 #if !(defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE > 0U))
@@ -172,13 +152,7 @@
 #undef SERIAL_MANAGER_HANDLE_SIZE_TEMP
 #define SERIAL_MANAGER_HANDLE_SIZE_TEMP SERIAL_PORT_UART_HANDLE_SIZE
 #endif
-#endif
 
-#if (defined(SERIAL_PORT_TYPE_UART_DMA) && (SERIAL_PORT_TYPE_UART_DMA > 0U))
-#if (SERIAL_PORT_UART_DMA_HANDLE_SIZE > SERIAL_MANAGER_HANDLE_SIZE_TEMP)
-#undef SERIAL_MANAGER_HANDLE_SIZE_TEMP
-#define SERIAL_MANAGER_HANDLE_SIZE_TEMP SERIAL_PORT_UART_DMA_HANDLE_SIZE
-#endif
 #endif
 
 #if (defined(SERIAL_PORT_TYPE_USBCDC) && (SERIAL_PORT_TYPE_USBCDC > 0U))
@@ -197,20 +171,6 @@
 #define SERIAL_MANAGER_HANDLE_SIZE_TEMP SERIAL_PORT_SWO_HANDLE_SIZE
 #endif
 
-#endif
-
-#if (defined(SERIAL_PORT_TYPE_SPI_MASTER) && (SERIAL_PORT_TYPE_SPI_MASTER > 0U))
-#if (SERIAL_PORT_SPI_MASTER_HANDLE_SIZE > SERIAL_MANAGER_HANDLE_SIZE_TEMP)
-#undef SERIAL_MANAGER_HANDLE_SIZE_TEMP
-#define SERIAL_MANAGER_HANDLE_SIZE_TEMP SERIAL_PORT_SPI_MASTER_HANDLE_SIZE
-#endif
-#endif
-
-#if (defined(SERIAL_PORT_TYPE_SPI_SLAVE) && (SERIAL_PORT_TYPE_SPI_SLAVE > 0U))
-#if (SERIAL_PORT_SPI_SLAVE_HANDLE_SIZE > SERIAL_MANAGER_HANDLE_SIZE_TEMP)
-#undef SERIAL_MANAGER_HANDLE_SIZE_TEMP
-#define SERIAL_MANAGER_HANDLE_SIZE_TEMP SERIAL_PORT_SPI_SLAVE_HANDLE_SIZE
-#endif
 #endif
 
 #if (defined(SERIAL_PORT_TYPE_VIRTUAL) && (SERIAL_PORT_TYPE_VIRTUAL > 0U))
@@ -238,14 +198,33 @@
 #error SERIAL_PORT_TYPE_UART, SERIAL_PORT_TYPE_USBCDC, SERIAL_PORT_TYPE_SWO and SERIAL_PORT_TYPE_VIRTUAL should not be cleared at same time.
 #endif
 
+#if defined(OSA_USED)
+#include "fsl_component_common_task.h"
+#endif
 /*! @brief Macro to determine whether use common task. */
 #ifndef SERIAL_MANAGER_USE_COMMON_TASK
 #define SERIAL_MANAGER_USE_COMMON_TASK (0U)
+#if (defined(COMMON_TASK_ENABLE) && (COMMON_TASK_ENABLE == 0U))
+#undef SERIAL_MANAGER_USE_COMMON_TASK
+#define SERIAL_MANAGER_USE_COMMON_TASK (0U)
+#endif
+#endif
+
+#if (defined(SERIAL_MANAGER_NON_BLOCKING_MODE) && (SERIAL_MANAGER_NON_BLOCKING_MODE > 0U))
+#if (defined(OSA_USED) && !(defined(SERIAL_MANAGER_USE_COMMON_TASK) && (SERIAL_MANAGER_USE_COMMON_TASK > 0U)))
+#include "fsl_os_abstraction.h"
+#endif
 #endif
 
 #if defined(OSA_USED)
-#if (defined(SERIAL_MANAGER_USE_COMMON_TASK) && (SERIAL_MANAGER_USE_COMMON_TASK > 0U))
 #include "fsl_component_common_task.h"
+#endif
+/*! @brief Macro to determine whether use common task. */
+#ifndef SERIAL_MANAGER_USE_COMMON_TASK
+#define SERIAL_MANAGER_USE_COMMON_TASK (0U)
+#if (defined(COMMON_TASK_ENABLE) && (COMMON_TASK_ENABLE == 0U))
+#undef SERIAL_MANAGER_USE_COMMON_TASK
+#define SERIAL_MANAGER_USE_COMMON_TASK (0U)
 #endif
 #endif
 
@@ -346,22 +325,15 @@ typedef void *serial_write_handle_t;
 /*! @brief The read handle of the serial manager module */
 typedef void *serial_read_handle_t;
 
-#ifndef _SERIAL_PORT_T_
-#define _SERIAL_PORT_T_
 /*! @brief serial port type*/
 typedef enum _serial_port_type
 {
-    kSerialPort_None = 0U, /*!< Serial port is none */
     kSerialPort_Uart = 1U, /*!< Serial port UART */
     kSerialPort_UsbCdc,    /*!< Serial port USB CDC */
     kSerialPort_Swo,       /*!< Serial port SWO */
     kSerialPort_Virtual,   /*!< Serial port Virtual */
     kSerialPort_Rpmsg,     /*!< Serial port RPMSG */
-    kSerialPort_UartDma,   /*!< Serial port UART DMA*/
-    kSerialPort_SpiMaster, /*!< Serial port SPIMASTER*/
-    kSerialPort_SpiSlave,  /*!< Serial port SPISLAVE*/
 } serial_port_type_t;
-#endif
 
 /*! @brief serial manager type*/
 typedef enum _serial_manager_type
@@ -405,18 +377,11 @@ typedef struct _serial_manager_callback_message
     uint32_t length; /*!< Transferred data length */
 } serial_manager_callback_message_t;
 
-/*! @brief serial manager callback function */
+/*! @brief callback function */
 typedef void (*serial_manager_callback_t)(void *callbackParam,
                                           serial_manager_callback_message_t *message,
                                           serial_manager_status_t status);
 
-/*! @brief serial manager Lowpower Critical callback function */
-typedef void (*serial_manager_lowpower_critical_callback_t)(void);
-typedef struct _serial_manager_lowpower_critical_CBs_t
-{
-    serial_manager_lowpower_critical_callback_t serialEnterLowpowerCriticalFunc;
-    serial_manager_lowpower_critical_callback_t serialExitLowpowerCriticalFunc;
-} serial_manager_lowpower_critical_CBs_t;
 /*******************************************************************************
  * API
  ******************************************************************************/
@@ -778,27 +743,6 @@ serial_manager_status_t SerialManager_InstallRxCallback(serial_read_handle_t rea
                                                         serial_manager_callback_t callback,
                                                         void *callbackParam);
 
-/*!
- * @brief Check if need polling ISR.
- *
- * This function is used to check if need polling ISR.
- *
- * @retval TRUE if need polling.
- */
-static inline bool SerialManager_needPollingIsr(void)
-{
-#if (defined(__DSC__) && defined(__CW__))
-    return !(isIRQAllowed());
-#elif defined(CPSR_M_Msk)
-    return (0x13 == (__get_CPSR() & CPSR_M_Msk));
-#elif defined(DAIF_I_BIT)
-    return (__get_DAIF() & DAIF_I_BIT);
-#elif defined(__XCC__)
-    return (xthal_get_interrupt() & xthal_get_intenable());
-#else
-    return (0U != __get_IPSR());
-#endif
-}
 #endif
 
 /*!
@@ -820,16 +764,6 @@ serial_manager_status_t SerialManager_EnterLowpower(serial_handle_t serialHandle
  * @retval kStatus_SerialManager_Success Successful operation.
  */
 serial_manager_status_t SerialManager_ExitLowpower(serial_handle_t serialHandle);
-
-/*!
- * @brief This function performs initialization of the callbacks structure used to disable lowpower
- *          when serial manager is active.
- *
- *
- * @param  pfCallback Pointer to the function structure used to allow/disable lowpower.
- *
- */
-void SerialManager_SetLowpowerCriticalCb(const serial_manager_lowpower_critical_CBs_t *pfCallback);
 
 #if defined(__cplusplus)
 }
