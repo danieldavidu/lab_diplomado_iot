@@ -21,7 +21,7 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-
+#define LPUART0_BUFFER_SIZE_MAX 50
 
 /*******************************************************************************
  * Private Prototypes
@@ -36,9 +36,9 @@
 /*******************************************************************************
  * Local vars
  ******************************************************************************/
-static uint8_t dato_lpuart0=0;
 static uint8_t flag_nuevo_dato_lpuart0=0;
-
+static uint8_t dato_lpuart0[LPUART0_BUFFER_SIZE_MAX];
+static uint8_t dato_lpuart0_index=0;
 /*******************************************************************************
  * Private Source Code
  ******************************************************************************/
@@ -47,19 +47,15 @@ void LPUART0_SERIAL_RX_TX_IRQHANDLER(void) {
   /* Reading all interrupt flags of status registers */
   intStatus = LPUART_GetStatusFlags(LPUART0_PERIPHERAL);
 
-  /* Flags can be cleared by reading the status register and reading/writing data registers.
-    See the reference manual for details of each flag.
-    The LPUART_ClearStatusFlags() function can be also used for clearing of flags in case the content of data/FIFO regsiter is not used.
-    For example:
-        status_t status;
-        status = LPUART_ClearStatusFlags(LPUART0_PERIPHERAL, intStatus);
-  */
 
-  /* Place your code here */
   if ((kLPUART_RxDataRegFullFlag) & intStatus) {
 
-	  dato_lpuart0 = LPUART_ReadByte(LPUART0);
-	  flag_nuevo_dato_lpuart0=1;
+	  dato_lpuart0[dato_lpuart0_index] = LPUART_ReadByte(LPUART0);
+	  		dato_lpuart0_index++;
+	  		if(dato_lpuart0_index>LPUART0_BUFFER_SIZE_MAX){
+	  			dato_lpuart0_index=0;
+	  		}
+	  		flag_nuevo_dato_lpuart0=1;
 
 
   }
@@ -76,8 +72,11 @@ void LPUART0_SERIAL_RX_TX_IRQHANDLER(void) {
  * Public Source Code
  ******************************************************************************/
 uint8_t leer_dato(void){
-
-	return(dato_lpuart0);
+	if(dato_lpuart0_index!=0){
+			return (dato_lpuart0[dato_lpuart0_index-1]);
+		}else{
+			return(0x00);
+		}
 }
 
 uint8_t leer_bandera_nuevo_dato(void){
@@ -87,3 +86,10 @@ uint8_t leer_bandera_nuevo_dato(void){
  void  escribir_bandera_nuevo_dato(uint8_t nuevo_valor){
  	 flag_nuevo_dato_lpuart0 = nuevo_valor;
   }
+
+ void borrar_buffer(void){
+ 	for(uint8_t i; i<LPUART0_BUFFER_SIZE_MAX; i++){
+ 		dato_lpuart0[i]=0x00;
+ 	}
+ 	dato_lpuart0_index=0;
+ }
